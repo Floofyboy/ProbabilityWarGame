@@ -11,6 +11,7 @@ namespace ProbabilityWarGame
 {
     class Program
     {
+        static Random rand = new Random();
         static void Main(string[] args)
         {
             // www.reddit.com/r/gameideas/comments/119cvmg/probability_guessing_war_game/
@@ -57,9 +58,8 @@ namespace ProbabilityWarGame
             // one, but i think it illustrate what the game would be about.
 
 
-
+           
             Army computerArmy = new Army();
-            Army playerArmy;
 
             for (int i = 0; i < 10; i++)
             {
@@ -71,53 +71,151 @@ namespace ProbabilityWarGame
                 computerArmy.AddUnit(new Unit(UnitType.Tank, 5, 3, 1));
             }
 
-            // player variant A
-            playerArmy = new Army();
-            for (int i = 0; i < 10; i++)
-            {
-                playerArmy.AddUnit(new Unit(UnitType.Soldier, 5, 1, 1));
-            }
-            for (int i = 0; i < 3; i++)
-            {
-                playerArmy.AddUnit(new Unit(UnitType.Soldier, 7, 2, 3, hasAntiTank:true));
-            }
-            DoBattles(computerArmy, playerArmy);
+            // Generate random player choices
+            Army[] playerChoices = new Army[4];
 
-
-            // player variant B
-            playerArmy = new Army();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 4; i++)
             {
-                playerArmy.AddUnit(new Unit(UnitType.Soldier, 5, 1, 1));
+                playerChoices[i] = GenerateRandomChoices();
             }
-            playerArmy.AddUnit(new Unit(UnitType.Plane, 15, 5, 3));
-            DoBattles(computerArmy, playerArmy);
+            // Display choices to player and ask them to choose
+            Console.WriteLine("Choose your army:");
 
-
-            // player variant C
-            playerArmy = new Army();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < playerChoices.Length; i++)
             {
-                playerArmy.AddUnit(new Unit(UnitType.Soldier, 5, 1, 1));
+                Console.WriteLine($"Option {i + 1}:");
+                Console.WriteLine(playerChoices[i].ToString());
+                Console.WriteLine();
             }
-            for (int i = 0; i < 15; i++)
-            {
-                playerArmy.AddUnit(new Unit(UnitType.Soldier, 3, 2, 3));
-            }
-            DoBattles(computerArmy, playerArmy);
 
+            int playerChoiceIndex = 0;
 
-            // player variant D
-            playerArmy = new Army();
-            for (int i = 0; i < 10; i++)
+            while (playerChoiceIndex < 1 || playerChoiceIndex > playerChoices.Length)
             {
-                playerArmy.AddUnit(new Unit(UnitType.Soldier, 5, 1, 1));
+                Console.Write("Enter your choice (1-4): ");
+                string input = Console.ReadLine();
+
+                if (int.TryParse(input, out playerChoiceIndex))
+                {
+                    if (playerChoiceIndex < 1 || playerChoiceIndex > playerChoices.Length)
+                    {
+                        Console.WriteLine("Invalid choice. Please enter a number between 1 and 4.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter a number between 1 and 4.");
+                }
             }
-            playerArmy.AddUnit(new Unit(UnitType.Soldier, 75, 1, 1));
-            DoBattles(computerArmy, playerArmy);
+
+            DoBattles(computerArmy, playerChoices[0]);
+            DoBattles(computerArmy, playerChoices[1]);
+            DoBattles(computerArmy, playerChoices[2]);
+            DoBattles(computerArmy, playerChoices[3]);
 
         }
+        private static Army GenerateRandomChoices()
+        {
+            Army choices = new Army();
 
+            int numUnitTypes = GetRandomInt(1, 3); // Choose 1 or 2 unit types
+
+            // Generate units for each unit type
+            for (int i = 0; i < numUnitTypes; i++)
+            {
+                UnitType unitType = (UnitType)GetRandomInt(0, 3);
+
+                int numUnits = GetRandomInt(1, 70);
+
+                int speed = GetRandomInt(1, 6);
+                int hp = GetRandomInt(1, 3);
+                int damage = GetRandomInt(1, 3);
+                bool antiTank = false;
+                bool antiAir = false;
+
+                for (int j = 0; j < numUnits; j++)
+                {
+
+
+                    switch (unitType)
+                    {
+                        case UnitType.Soldier:
+                            //speed = Math.Min(speed, 10);
+                            //damage = Math.Min(damage, 5);
+                            break;
+                        case UnitType.Tank:
+                            //speed = Math.Min(speed,15);
+                            //damage = Math.Max(damage, 5);
+                            antiTank = true;
+                            break;
+                        case UnitType.Plane:
+                            //speed = Math.Max(speed, 50);
+                            //hp = Math.Max(hp, 10);
+                            //damage = Math.Max(damage, 5);
+                            antiTank = true;
+                            antiAir = true;
+                            break;
+                    }
+
+                    choices.AddUnit(new Unit(unitType, speed, hp, damage, antiTank, antiAir));
+                }
+            }
+
+            // Calculate score for the army
+            double score = CalculateArmyScore(choices);
+
+            // If the score is too high or too low, regenerate the army
+            while (score > 200 || score < 180)
+            {
+                choices = GenerateRandomChoices();
+                score = CalculateArmyScore(choices);
+            }
+
+            return choices;
+        }
+
+        private static double CalculateArmyScore(Army army)
+        {
+            const double soldierMultiplier = 1;
+            const double tankMultiplier = 1.2;
+            const double planeMultiplier = 1.3;
+
+            double score = 0;
+            foreach (Unit unit in army.Units)
+            {
+                double unitScore = unit.Speed*2 + unit.Hp + unit.Damage;
+
+                switch (unit.UnitType)
+                {
+                    case UnitType.Soldier:
+                        unitScore *= soldierMultiplier;
+                        break;
+                    case UnitType.Tank:
+                        unitScore *= tankMultiplier;
+                        break;
+                    case UnitType.Plane:
+                        unitScore *= planeMultiplier;
+                        break;
+                }
+
+                score += unitScore;
+            }
+
+            return score;
+        }
+
+        private static int GetRandomSeed()
+        {
+            return Guid.NewGuid().GetHashCode();
+        }
+
+        private static int GetRandomInt(int min, int max)
+        {
+            // Create a new Random object with a random seed
+            Random rand = new Random(GetRandomSeed());
+
+            return rand.Next(min, max);
+        }
 
 
         private static void DoBattles(Army computerArmy, Army playerArmy)
@@ -155,6 +253,7 @@ namespace ProbabilityWarGame
                         });
 
             Console.WriteLine($"computerWins: {computerWins} ({computerWins / (double)MAX_ITERATIONS:n3}), playerWins: {playerWins} ({playerWins / (double)MAX_ITERATIONS:n3})");
+           
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,27 +15,6 @@ namespace ProbabilityWarGame
         public int          PlaneCount      { get; private set; }
         public int          TotalSpeed      { get; private set; }
         
-
-
-        //public int TotalSpeed
-        //{
-        //    get
-        //    {
-        //        return Units.Sum((x) => x.Speed);
-        //    }
-        //}
-
-
-
-        //public Army(IEnumerable<Unit> units)
-        //{
-        //    foreach (Unit unit in units)
-        //    {
-        //        AddUnit(unit);
-        //    }
-        //}
-
-
 
         public Army()
         {
@@ -82,6 +62,8 @@ namespace ProbabilityWarGame
 
 
 
+
+
         public void RemoveUnit(Unit unit)
         {
             Units.Remove(unit);
@@ -92,6 +74,45 @@ namespace ProbabilityWarGame
                 case UnitType.Tank:     TankCount--;    break;
                 case UnitType.Plane:    PlaneCount--;   break;
             }
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            bool isFirstLine = true;
+
+            if (SoldierCount > 0)
+            {
+                sb.AppendLine($"{SoldierCount} Soldier");
+                isFirstLine = false;
+            }
+
+            foreach (var unitGroup in Units.GroupBy(u => u.UnitType).OrderBy(g => g.Key))
+            {
+                int count = unitGroup.Count();
+
+                if (count > 0)
+                {
+                    int speed = unitGroup.Max(unit => unit.Speed);
+                    int hp = unitGroup.Max(unit => unit.Hp);
+                    int damage = unitGroup.Max(unit => unit.Damage);
+                    bool hasAntiTank = unitGroup.Any(unit => unit.HasAntiTank);
+                    bool hasAntiAir = unitGroup.Any(unit => unit.HasAntiAir);
+
+                    if (!isFirstLine)
+                    {
+                        sb.AppendLine();
+                    }
+                    else
+                    {
+                        isFirstLine = false;
+                    }
+
+                    sb.Append($"{count} {unitGroup.Key.ToString()} {speed}S/{hp}HP/{damage}A{(hasAntiTank ? "/AT" : "")}{(hasAntiAir ? "/AA" : "")}");
+                }
+            }
+
+            return sb.ToString().TrimEnd();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,19 +27,14 @@ namespace ProbabilityWarGame
 
 
 
-        public Unit(UnitType unitType
-                   ,int      speed   
-                   ,int      hp      
-                   ,int      damage
-                   ,bool     hasAntiTank    = false
-                   ,bool     hasAntiAir     = false )
+        public Unit(UnitType unitType, int speed, int hp, int damage, bool hasAntiTank = false, bool hasAntiAir = false)
         {
-            UnitType    = unitType   ;
-            Speed       = speed      ;
-            Hp          = hp         ;
-            Damage      = damage     ;
+            UnitType = unitType;
+            Speed = speed;
+            Hp = hp;
+            Damage = damage;
             HasAntiTank = hasAntiTank;
-            HasAntiAir  = hasAntiAir ;
+            HasAntiAir = hasAntiAir;
         }
 
 
@@ -51,6 +47,34 @@ namespace ProbabilityWarGame
             Damage      = existing.Damage     ;
             HasAntiTank = existing.HasAntiTank;
             HasAntiAir  = existing.HasAntiAir ;
+        }
+        public override string ToString()
+        {
+            string unitTypeToString = "";
+            switch (UnitType)
+            {
+                case UnitType.Soldier:
+                    unitTypeToString = "S";
+                    break;
+                case UnitType.Tank:
+                    unitTypeToString = "T";
+                    break;
+                case UnitType.Plane:
+                    unitTypeToString = "P";
+                    break;
+            }
+
+            string unitStats = $"SP{Speed}/HP{Hp}/DMG{Damage}";
+            if (HasAntiTank)
+            {
+                unitStats += "/AT";
+            }
+            if (HasAntiAir)
+            {
+                unitStats += "/AA";
+            }
+
+            return $"{unitTypeToString}{unitStats}";
         }
     }
 }
